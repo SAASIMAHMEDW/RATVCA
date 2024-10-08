@@ -227,6 +227,8 @@ class MainService : Service(), MainRepository.Listener {
     }
 
     interface EndCallListener {
+
         fun onCallEnded()
+        fun onCallRejected(message: String)
     }
 }

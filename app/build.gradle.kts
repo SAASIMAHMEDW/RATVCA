@@ -62,5 +62,15 @@ dependencies {
     implementation (libs.hilt.android)
     kapt (libs.hilt.compiler)
     implementation (libs.permissionx)
+
+    implementation (libs.retrofit2.retrofit)
+    implementation (libs.converter.gson)
+
+    // ML Kit Translation
+    implementation (libs.translate)
+
+    // Vosk for Offline Speech Recognition (STT)
+    implementation ("com.alphacephei:vosk-android:0.3.47")
+
 }
 

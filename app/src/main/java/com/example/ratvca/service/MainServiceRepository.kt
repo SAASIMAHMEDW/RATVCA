@@ -9,6 +9,8 @@ class MainServiceRepository @Inject constructor(
     private val context: Context
 ) {
 
+    lateinit var webRTCClient: Any
+
     fun startService(username:String){
         Thread{
             val intent = Intent(context, MainService::class.java)

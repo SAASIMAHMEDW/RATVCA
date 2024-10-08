@@ -1,6 +1,7 @@
 package com.example.ratvca.repository
 
 import android.content.Intent
+import android.util.Log
 import com.example.ratvca.firebaseClient.FirebaseClient
 import com.example.ratvca.utils.DataModel
 import com.example.ratvca.utils.DataModelType
@@ -172,6 +173,10 @@ class MainRepository @Inject constructor(
         firebaseClient.sendMessageToOtherClient(data) {}
     }
 
+    override fun onCallRejected(message: String) {
+        TODO("Not yet implemented")
+    }
+
     fun setScreenCaptureIntent(screenPermissionIntent: Intent) {
         webRTCClient.setPermissionIntent(screenPermissionIntent)
     }
@@ -183,6 +188,7 @@ class MainRepository @Inject constructor(
             webRTCClient.stopScreenCapturing()
         }
     }
+
 
     fun logOff(function: () -> Unit) = firebaseClient.logOff(function)
 

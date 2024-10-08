@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -24,18 +28,21 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class CallActivity : AppCompatActivity(), MainService.EndCallListener {
 
-    private var target:String?=null
-    private var isVideoCall:Boolean= true
-    private var isCaller:Boolean = true
+    private var target: String? = null
+    private var isVideoCall: Boolean = true
+    private var isCaller: Boolean = true
 
     private var isMicrophoneMuted = false
     private var isCameraMuted = false
     private var isSpeakerMode = true
     private var isScreenCasting = false
 
+    private var inputLang: String? = null // Variable to hold selected input language
+    private var outputLang: String? = null // Variable to hold selected output language
 
-    @Inject lateinit var serviceRepository: MainServiceRepository
-    private lateinit var requestScreenCaptureLauncher:ActivityResultLauncher<Intent>
+    @Inject
+    lateinit var serviceRepository: MainServiceRepository
+    private lateinit var requestScreenCaptureLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var views: ActivityCallBinding
 
@@ -43,7 +50,7 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
         super.onStart()
         requestScreenCaptureLauncher = registerForActivityResult(ActivityResultContracts
             .StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK){
+            if (result.resultCode == Activity.RESULT_OK) {
                 val intent = result.data
                 //its time to give this intent to our service and service passes it to our webrtc client
                 MainService.screenPermissionIntent = intent
@@ -61,37 +68,36 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
         init()
     }
 
-    private fun init(){
+    private fun init() {
         intent.getStringExtra("target")?.let {
             this.target = it
-        }?: kotlin.run {
+        } ?: kotlin.run {
             finish()
         }
 
-        isVideoCall = intent.getBooleanExtra("isVideoCall",true)
-        isCaller = intent.getBooleanExtra("isCaller",true)
+        isVideoCall = intent.getBooleanExtra("isVideoCall", true)
+        isCaller = intent.getBooleanExtra("isCaller", true)
 
         views.apply {
             callTitleTv.text = "In call with $target"
             CoroutineScope(Dispatchers.IO).launch {
-                for (i in 0..3600){
-                   delay(1000)
-                   withContext(Dispatchers.Main){
-                       //convert this int to human readable time
-                       callTimerTv.text = i.convertToHumanTime()
-                   }
+                for (i in 0..3600) {
+                    delay(1000)
+                    withContext(Dispatchers.Main) {
+                        //convert this int to human readable time
+                        callTimerTv.text = i.convertToHumanTime()
+                    }
                 }
             }
 
-            if (!isVideoCall){
+            if (!isVideoCall) {
                 toggleCameraButton.isVisible = false
                 screenShareButton.isVisible = false
                 switchCameraButton.isVisible = false
-
             }
             MainService.remoteSurfaceView = remoteView
             MainService.localSurfaceView = localView
-            serviceRepository.setupViews(isVideoCall,isCaller,target!!)
+            serviceRepository.setupViews(isVideoCall, isCaller, target!!)
 
             endCallButton.setOnClickListener {
                 serviceRepository.sendEndCall()
@@ -100,7 +106,11 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
             switchCameraButton.setOnClickListener {
                 serviceRepository.switchCamera()
             }
+
+            // Initialize language spinners
+            setupLanguageSpinners()
         }
+
         setupMicToggleClicked()
         setupCameraToggleClicked()
         setupToggleAudioDevice()
@@ -108,29 +118,68 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
         MainService.endCallListener = this
     }
 
+    private fun setupLanguageSpinners() {
+        // Create an array of languages
+        val languages = arrayOf("English", "Hindi", "Kannada")
+
+        // Set up adapter for input language spinner
+        val inputAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, languages)
+        inputAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        views.inputLanguageSpinner.adapter = inputAdapter
+
+        // Set up adapter for output language spinner
+        val outputAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, languages)
+        outputAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        views.outputLanguageSpinner.adapter = outputAdapter
+
+        // Listener for input language selection
+        views.inputLanguageSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                inputLang = languages[position]
+                Toast.makeText(this@CallActivity, "Input Language: $inputLang", Toast.LENGTH_SHORT).show() // Optional toast for debugging
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Optional: Handle the case where no item is selected, if needed
+            }
+        })
+
+        // Listener for output language selection
+        views.outputLanguageSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                outputLang = languages[position]
+                Toast.makeText(this@CallActivity, "Output Language: $outputLang", Toast.LENGTH_SHORT).show() // Optional toast for debugging
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Optional: Handle the case where no item is selected, if needed
+            }
+        })
+    }
+
+
     private fun setupScreenCasting() {
         views.apply {
             screenShareButton.setOnClickListener {
-               if (!isScreenCasting){
-                   //we have to start casting
-                   AlertDialog.Builder(this@CallActivity)
-                       .setTitle("Screen Casting")
-                       .setMessage("You sure to start casting ?")
-                       .setPositiveButton("Yes"){dialog,_ ->
-                           //start screen casting process
-                           startScreenCapture()
-                           dialog.dismiss()
-                       }.setNegativeButton("No") {dialog,_ ->
-                           dialog.dismiss()
-                       }.create().show()
-               }else{
-                   //we have to end screen casting
-                   isScreenCasting = false
-                   updateUiToScreenCaptureIsOff()
-                   serviceRepository.toggleScreenShare(false)
-               }
+                if (!isScreenCasting) {
+                    //we have to start casting
+                    AlertDialog.Builder(this@CallActivity)
+                        .setTitle("Screen Casting")
+                        .setMessage("You sure to start casting ?")
+                        .setPositiveButton("Yes") { dialog, _ ->
+                            //start screen casting process
+                            startScreenCapture()
+                            dialog.dismiss()
+                        }.setNegativeButton("No") { dialog, _ ->
+                            dialog.dismiss()
+                        }.create().show()
+                } else {
+                    //we have to end screen casting
+                    isScreenCasting = false
+                    updateUiToScreenCaptureIsOff()
+                    serviceRepository.toggleScreenShare(false)
+                }
             }
-
         }
     }
 
@@ -141,18 +190,17 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
 
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
         requestScreenCaptureLauncher.launch(captureIntent)
-
     }
 
-    private fun updateUiToScreenCaptureIsOn(){
+    private fun updateUiToScreenCaptureIsOn() {
         views.apply {
             localView.isVisible = false
             switchCameraButton.isVisible = false
             toggleCameraButton.isVisible = false
             screenShareButton.setImageResource(R.drawable.ic_stop_screen_share)
         }
-
     }
+
     private fun updateUiToScreenCaptureIsOff() {
         views.apply {
             localView.isVisible = true
@@ -161,16 +209,17 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
             screenShareButton.setImageResource(R.drawable.ic_screen_share)
         }
     }
-    private fun setupMicToggleClicked(){
+
+    private fun setupMicToggleClicked() {
         views.apply {
             toggleMicrophoneButton.setOnClickListener {
-                if (!isMicrophoneMuted){
+                if (!isMicrophoneMuted) {
                     //we should mute our mic
                     //1. send a command to repository
                     serviceRepository.toggleAudio(true)
                     //2. update ui to mic is muted
                     toggleMicrophoneButton.setImageResource(R.drawable.ic_mic_on)
-                }else{
+                } else {
                     //we should set it back to normal
                     //1. send a command to repository to make it back to normal status
                     serviceRepository.toggleAudio(false)
@@ -187,34 +236,32 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
         serviceRepository.sendEndCall()
     }
 
-    private fun setupToggleAudioDevice(){
+    private fun setupToggleAudioDevice() {
         views.apply {
             toggleAudioDevice.setOnClickListener {
-                if (isSpeakerMode){
+                if (isSpeakerMode) {
                     //we should set it to earpiece mode
                     toggleAudioDevice.setImageResource(R.drawable.ic_speaker)
                     //we should send a command to our service to switch between devices
                     serviceRepository.toggleAudioDevice(RTCAudioManager.AudioDevice.EARPIECE.name)
 
-                }else{
+                } else {
                     //we should set it to speaker mode
                     toggleAudioDevice.setImageResource(R.drawable.ic_ear)
                     serviceRepository.toggleAudioDevice(RTCAudioManager.AudioDevice.SPEAKER_PHONE.name)
-
                 }
                 isSpeakerMode = !isSpeakerMode
             }
-
         }
     }
 
-    private fun setupCameraToggleClicked(){
+    private fun setupCameraToggleClicked() {
         views.apply {
             toggleCameraButton.setOnClickListener {
-                if (!isCameraMuted){
+                if (!isCameraMuted) {
                     serviceRepository.toggleVideo(true)
                     toggleCameraButton.setImageResource(R.drawable.ic_camera_on)
-                }else{
+                } else {
                     serviceRepository.toggleVideo(false)
                     toggleCameraButton.setImageResource(R.drawable.ic_camera_off)
                 }
@@ -234,7 +281,13 @@ class CallActivity : AppCompatActivity(), MainService.EndCallListener {
         MainService.remoteSurfaceView = null
 
         MainService.localSurfaceView?.release()
-        MainService.localSurfaceView =null
+        MainService.localSurfaceView = null
+    }
 
+    override fun onCallRejected(message: String) {
+        // Show a message to User A that the call was rejected
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // Optionally, finish the activity or update UI
+        finish() // or update the UI as needed
     }
 }

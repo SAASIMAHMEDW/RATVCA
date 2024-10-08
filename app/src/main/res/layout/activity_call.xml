@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
@@ -19,6 +20,7 @@
         android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@id/controlPanelLayout"
         app:layout_constraintEnd_toEndOf="parent"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
@@ -27,6 +29,7 @@
         android:background="@color/faded_black"
         app:layout_constraintTop_toTopOf="parent"
         android:id="@+id/titleLayout">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -37,7 +40,7 @@
             android:padding="10dp"
             android:id="@+id/callTimerTv"
             android:text="00:01"
-            app:drawableStartCompat="@drawable/ic_record" />
+            app:drawableStartCompat="@drawable/ic_record"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -49,9 +52,58 @@
             android:textColor="@color/white"
             android:padding="10dp"
             android:id="@+id/callTitleTv"
-            android:text="Video Call With Masoud"/>
+            android:text="Video Call With RATVCA"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Language Selection Layout -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:orientation="vertical"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/controlPanelLayout"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Input: "
+                android:textColor="#FFEB3B"
+                android:textSize="16sp" />
+
+            <Spinner
+                android:id="@+id/inputLanguageSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dialog" />
+        </LinearLayout>
+
+       <LinearLayout
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:orientation="horizontal">
+
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:text="Output: "
+               android:textColor="#FFEB3B"
+               android:textSize="16sp" />
+
+           <Spinner
+               android:id="@+id/outputLanguageSpinner"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:spinnerMode="dialog" />
+       </LinearLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -61,24 +113,28 @@
         android:background="@color/faded_black"
         app:layout_constraintBottom_toBottomOf="parent"
         android:id="@+id/controlPanelLayout">
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:id="@+id/endCallButton"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_end_call"/>
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:id="@+id/toggleMicrophoneButton"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_mic_off"/>
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:id="@+id/toggleCameraButton"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_camera_off"/>
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
@@ -92,17 +148,12 @@
             android:id="@+id/toggleAudioDevice"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_ear"/>
+
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:id="@+id/screenShareButton"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_screen_share"/>
-
-
     </LinearLayout>
-
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
